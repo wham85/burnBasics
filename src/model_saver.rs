@@ -1,25 +1,28 @@
+// src/model_saver.rs
+
 use crate::dqn_model::DqnModel;
 use crate::types::B;
-use bincode;
+use burn::record::CompactRecorder;
+use burn::record::Recorder;
+use std::path::Path;
 use burn::module::Module;
-use burn::tensor::backend::Backend;
-use std::fs::File;
-use std::io::{BufReader, BufWriter};
 
-/// 모델 저장: model → record → bincode 파일
-pub fn save_model(model: &DqnModel<B>, path: &str)
-where
-    B: Backend,
-{
-    let record = model.clone().into_record();
-    let writer = BufWriter::new(File::create(path).unwrap());
-    bincode::serialize_into(writer, &record).unwrap();
-    println!("💾 모델 저장 완료 → {}", path);
+// 폴더 없이 복사하는 수 있게 model_path는 Path 파라미터로 만들어줌.
+
+pub fn save_model(model: &DqnModel<B>, model_path: &str) {
+    let recorder = CompactRecorder::new();
+    model.clone()
+        .save_file(model_path, &recorder)
+        .expect("모델 저장 실패");
 }
 
-/// 모델 불러오기: 파일 → record → model
-pub fn load_model(path: &str, device: &<B as Backend>::Device) -> DqnModel<B> {
-    let reader = BufReader::new(File::open(path).unwrap());
-    let record: <DqnModel<B> as Module<B>>::Record = bincode::deserialize_from(reader).unwrap();
-    DqnModel::from_record(record).to_device(device)
+pub fn load_model(model_path: &str, device: &<B as burn::tensor::backend::Backend>::Device) -> DqnModel<B> {
+    let recorder = CompactRecorder::new();
+
+    // 작성된 Record를 로드해서 다시 메뉴 플레이스로 사용
+    let record = recorder
+        .load(Path::new(model_path).to_path_buf(), device)
+        .expect("모델 로드 실패");
+
+    DqnModel::new(device).load_record(record)
 }
