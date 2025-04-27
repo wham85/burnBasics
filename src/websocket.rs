@@ -32,9 +32,11 @@ pub async fn upbit_websocket_handler(
     tick_sender: Sender<TickData>,
     order_sender: Sender<OrderBookData>,
 ) {
+    println!("first");
     let url = "wss://api.upbit.com/websocket/v1";
     let (ws_stream, _) = connect_async(url).await.expect("[WebSocket] 연결 실패");
 
+    println!("last");
     println!("[WebSocket] 연결 성공: {}", coin_code);
     let (mut write, mut read) = ws_stream.split();
 
@@ -54,6 +56,7 @@ pub async fn upbit_websocket_handler(
                 if let Some(data_type) = value.get("type").and_then(|v| v.as_str()) {
                     match data_type {
                         "trade" => {
+                            println!("{:?}", value);
                             if let (Some(price), Some(volume), Some(side), Some(timestamp)) = (
                                 value.get("trade_price"),
                                 value.get("trade_volume"),

@@ -1,9 +1,10 @@
 use crate::types::B;
 use burn::tensor::{backend::Backend, Tensor};
+use serde::{Serialize, Deserialize};
 
 /// 🧠 상태, 행동, 보상, 다음 상태를 저장하는 구조체
 /// DQN에서는 이 경험을 기반으로 학습합니다
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplaySample {
     /// 현재 상태 (state)
     pub state: Tensor<B, 2>,
